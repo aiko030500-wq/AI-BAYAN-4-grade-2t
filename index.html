@@ -115,6 +115,32 @@
   th, td {
     padding: 4px 6px;
   }
+
+  /* ✅ Анимация галочки и крестика (общая для всего сайта) */
+  .result-icon {
+    font-size: 3rem;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .result-icon.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .correct {
+    color: #00c853; /* ярко-зелёная галочка */
+    text-shadow: 0 0 15px #7fff8c;
+  }
+  .wrong {
+    color: #ff1744; /* красный крестик */
+    text-shadow: 0 0 15px #ff7f7f;
+  }
 </style>
 </head>
 <body>
@@ -203,6 +229,9 @@
   </section>
 </main>
 
+<!-- Иконка для анимации ✔ / ✖ -->
+<div id="feedbackIcon" class="result-icon"></div>
+
 <script>
 // ✅ Разрешённые имена (англ. вариант)
 const allowedNames = [
@@ -246,7 +275,6 @@ function updateStars(){
   }
   total += Number(localStorage.getItem(name+"_chatStars")) || 0;
   document.getElementById("totalStars").innerText = total;
-  // можно сохранить общий итог в отдельный ключ
   localStorage.setItem(name+"_totalStars", total);
 }
 
@@ -300,10 +328,27 @@ function openChatSection(){
   document.getElementById("chatSection").style.display = "block";
 }
 
+// 🎯 показать галочку или крестик (можно использовать в темах, здесь для теста)
+function showResult(isCorrect) {
+  const icon = document.getElementById("feedbackIcon");
+  if (isCorrect) {
+    icon.textContent = "✔";
+    icon.className = "result-icon correct show";
+  } else {
+    icon.textContent = "✖";
+    icon.className = "result-icon wrong show";
+  }
+  setTimeout(() => {
+    icon.classList.remove("show");
+  }, 900);
+}
+
 // ================== 🤖 AI BAYAN ONLINE CHAT ==================
 
-// ⚠️ ТУТ НУЖЕН ТВОЙ КЛЮЧ OPENAI (НЕ КЛАДИ С ЭТИМ ФАЙЛОМ НА ОТКРЫТЫЙ GITHUB!)
-const OPENAI_API_KEY = "YOUR_OPENAI_API_KEY_HERE";
+// ⚠️ ВАЖНО: сюда НЕ нужно вставлять настоящий ключ, если сайт будет в интернете.
+// Для домашнего/школьного оффлайн-использования можно временно вставить:
+// const OPENAI_API_KEY = "sk-proj-.......rZcA";
+const OPENAI_API_KEY = "sk-proj-.......rZcA"; // ЗАМЕНИ на свой (или сделай прокси на сервере)
 
 async function askBayan(){
   const input = document.getElementById('chatInput');
@@ -325,7 +370,7 @@ async function askBayan(){
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + sk-proj-MntsizlNtW
+        "Authorization": "Bearer " + OPENAI_API_KEY
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
@@ -339,11 +384,17 @@ async function askBayan(){
       })
     });
 
-    const data = await response.json();
-    const answer = data.choices?.[0]?.message?.content || "Sorry, I cannot answer right now.";
-
     const thinking = document.getElementById("thinking");
     if(thinking) thinking.remove();
+
+    if(!response.ok){
+      box.innerHTML += `<p><b>AI Bayan:</b> Sorry, there was a connection error (${response.status}).</p>`;
+      box.scrollTop = box.scrollHeight;
+      return;
+    }
+
+    const data = await response.json();
+    const answer = data.choices?.[0]?.message?.content || "Sorry, I cannot answer right now.";
 
     box.innerHTML += `<p><b>AI Bayan:</b> ${answer}</p>`;
     box.scrollTop = box.scrollHeight;
@@ -374,6 +425,8 @@ function clearChat(){
 
 // 🎙️ мягкий голос AI Bayan
 function bayanSpeak(text){
+  if(!('speechSynthesis' in window)) return;
+
   const speakNow = () => {
     const voices = speechSynthesis.getVoices();
     let voice = voices.find(v =>
@@ -398,98 +451,13 @@ function bayanSpeak(text){
     speakNow();
   }
 }
-</script>...
-<script src="animations.js"></script>
-  <style>
-  .result-icon {
-    font-size: 2.5rem;
-    opacity: 0;
-    transition: opacity 0.4s ease, transform 0.4s ease;
-    transform: scale(0.5);
-    position: fixed;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.5);
-    z-index: 9999;
-  }
-  .result-icon.show {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  .correct {
-    color: #4CAF50; /* зелёная галочка */
-  }
-  .wrong {
-    color: #e53935; /* красный крестик */
-  }
-</style>
-
-<div id="feedbackIcon" class="result-icon"></div>
-
-<script>
-function showResult(isCorrect) {
-  const icon = document.getElementById("feedbackIcon");
-  if (isCorrect) {
-    icon.textContent = "✔";
-    icon.className = "result-icon correct show";
-  } else {
-    icon.textContent = "✖";
-    icon.className = "result-icon wrong show";
-  }
-  setTimeout(() => {
-    icon.classList.remove("show");
-  }, 800);
-}
 </script>
-  <!-- ✅ Анимация галочки и крестика -->
-<style>
-  .result-icon {
-    font-size: 3rem;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-    position: fixed;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.5);
-    z-index: 9999;
-    pointer-events: none;
-  }
-  .result-icon.show {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  .correct {
-    color: #00c853; /* ярко-зелёная галочка */
-    text-shadow: 0 0 15px #7fff8c;
-  }
-  .wrong {
-    color: #ff1744; /* красный крестик */
-    text-shadow: 0 0 15px #ff7f7f;
-  }
-</style>
 
-<!-- Иконка (появляется при ответах) -->
-<div id="feedbackIcon" class="result-icon"></div>
-
-<script>
-  // 🎯 показать галочку или крестик
-  function showResult(isCorrect) {
-    const icon = document.getElementById("feedbackIcon");
-    if (isCorrect) {
-      icon.textContent = "✔";
-      icon.className = "result-icon correct show";
-    } else {
-      icon.textContent = "✖";
-      icon.className = "result-icon wrong show";
-    }
-    // через 0.9 сек скрыть
-    setTimeout(() => {
-      icon.classList.remove("show");
-    }, 900);
-  }
-</script>
-  <button onclick="showResult(true)">✔ Test Correct</button>
+<!-- Кнопки для теста анимации (можно удалить) -->
+<!--
+<button onclick="showResult(true)">✔ Test Correct</button>
 <button onclick="showResult(false)">✖ Test Wrong</button>
+-->
+
 </body>
 </html>
